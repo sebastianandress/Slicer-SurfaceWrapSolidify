@@ -415,13 +415,14 @@ class WrapSolidifyLogic(object):
   def _getInitialRegionPd(self):
     """Get initial shape that will be snapped to closest point of the input segment"""
 
+    spacing = self._inputSpacing / self.remeshOversampling
+
     if self.carveHolesInOuterSurface:
       # Grow input polydata to close holes between outer surface and internal cavities.
 
       # It is less accurate but more robust to dilate labelmap than grow polydata.
       # Since accuracy is not important here, we dilate labelmap.
       # Convert to labelmap
-      spacing = self._inputSpacing / self.remeshOversampling
       carveHolesInOuterSurfaceRadius = self.carveHolesInOuterSurfaceDiameter/2.0
       # add self.carveHolesInOuterSurfaceDiameter extra to bounds to ensure that the grown input still has an margin around
       inputLabelmap = WrapSolidifyLogic._polydataToLabelmap(self._inputPd, spacing, extraMarginToBounds=carveHolesInOuterSurfaceRadius)
@@ -474,8 +475,18 @@ class WrapSolidifyLogic(object):
         sphereSource = vtk.vtkSphereSource()
         # to make sure the volume is fully included in the sphere, radius must be sqrt(2) times larger
         sphereSource.SetRadius(maxRadius*1.5)
-        sphereSource.SetPhiResolution(max(int(maxRadius/5), 10))
-        sphereSource.SetThetaResolution(max(int(maxRadius/5), 10))
+
+        # Set resolution to be about one magnitude lower than the final resolution
+        # (by creating an initial surface element for about every 100th final element).
+        sphereSurfaceArea = 4 * math.pi * maxRadius*maxRadius
+        voxelSurfaceArea = spacing * spacing
+        numberOfSurfaceElements = sphereSurfaceArea/voxelSurfaceArea
+        numberOfIinitialSphereSurfaceElements = numberOfSurfaceElements/100
+        sphereResolution = math.sqrt(numberOfIinitialSphereSurfaceElements)
+        # Set resolution to minimum 10
+        sphereResolution = max(int(sphereResolution), 10)
+        sphereSource.SetPhiResolution(sphereResolution)
+        sphereSource.SetThetaResolution(sphereResolution)
         sphereSource.SetCenter((bounds[0]+bounds[1])/2.0, (bounds[2]+bounds[3])/2.0, (bounds[4]+bounds[5])/2.0)
         sphereSource.Update()
         initialRegionPd = sphereSource.GetOutput()

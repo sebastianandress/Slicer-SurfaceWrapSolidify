@@ -12,7 +12,7 @@ Please cite the corresponding paper when using this filter for publications:
     }
 
 
-For further collaborations, patient studies or any help, do not hesitate to contact [Sebastian Andreß, MD](mailto:sebastian.andress@med.uni-muenchen.de).
+For further collaborations, patient studies or any help, do not hesitate to contact [Sebastian Andreß](mailto:sebastian.andress@med.uni-muenchen.de).
 Thanks a lot to [Andras Lasso](https://github.com/lassoan) for also contributing and improving the module.
 
 ![Header](/Resources/Media/header.png)
@@ -55,7 +55,7 @@ The Wrap Solidify Effect uses the following pipeline:
     4. (optional) [Step 4](#Description).
 
 
-### Kwargs for code implementation
+<!-- ### Kwargs for code implementation
 | Parameter | Key | Default | Possible Values | Unit | Type | Feature
 | - | - | - | - | - | - | - |
 | Output Type | `outputType` | `SEGMENTATION` | `SEGMENTATION`, `MODEL` | | `string` | |
@@ -67,7 +67,7 @@ The Wrap Solidify Effect uses the following pipeline:
 | Shell Thickness | `shellThickness` | `1.5` | `>=-0.1` | mm | `float` | If <0, a non-solid model will be created. |
 | Number of Shrinkwrap Iterations | `iterationsNr` | `7` | `>0` | `int` | |
 | Spacing | `spacing` | `1.0` | `>0` | mm^3 | `float` | |
-| Shell to Input Distance | `shellDistance` | `0.7` | `>=-0.1` | mm | `float` | If <0, no vertex gets deleted. |
+| Shell to Input Distance | `shellDistance` | `0.7` | `>=-0.1` | mm | `float` | If <0, no vertex gets deleted. | -->
 
 
 ## Results

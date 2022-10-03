@@ -222,6 +222,15 @@ class SegmentEditorEffect(AbstractScriptedSegmentEditorEffect):
     try:
       # Set inputs
       self.logic.segmentationNode = self.scriptedEffect.parameterSetNode().GetSegmentationNode()
+      
+      # Save smoothing factor
+      segmentationSmoothingFactor = (
+        self.logic.segmentationNode.GetSegmentation().GetConversionParameter(
+          'Smoothing factor'
+        )
+      )
+
+      # Continue setting inputs
       self.logic.segmentId = currentSegmentId = self.scriptedEffect.parameterSetNode().GetSelectedSegmentID()
       self.logic.region = self.scriptedEffect.parameter(ARG_REGION)
       self.logic.regionSegmentId = self.scriptedEffect.parameter(ARG_REGION_SEGMENT_ID) if self.scriptedEffect.parameterDefined(ARG_REGION_SEGMENT_ID) else ""
@@ -245,6 +254,19 @@ class SegmentEditorEffect(AbstractScriptedSegmentEditorEffect):
       if self.logic.outputType == OUTPUT_MODEL:
         self.scriptedEffect.parameterSetNode().SetNodeReferenceID(ARG_OUTPUT_MODEL_NODE,
           self.logic.outputModelNode.GetID() if self.logic.outputModelNode else "")
+
+      # Restore smoothing factor
+      self.logic.segmentationNode.GetSegmentation().SetConversionParameter(
+        'Smoothing factor',
+        segmentationSmoothingFactor
+      )
+
+      self.logic.segmentationNode.GetSegmentation().CreateRepresentation(
+        'Closed surface',
+         True
+      ) # Last parameter forces conversion even if it exists
+
+      self.logic.segmentationNode.Modified() # Update display
 
     except Exception as e:
       import traceback

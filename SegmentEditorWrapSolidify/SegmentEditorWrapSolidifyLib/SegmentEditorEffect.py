@@ -41,7 +41,7 @@ class SegmentEditorEffect(AbstractScriptedSegmentEditorEffect):
 
   def deactivate(self):
     self.cleanup()
-  
+
   def cleanup(self):
     pass
 
@@ -153,7 +153,7 @@ class SegmentEditorEffect(AbstractScriptedSegmentEditorEffect):
         widget.button(-2-optionIndex).setChecked(True)
       elif widgetClassName=="qMRMLSegmentSelectorWidget":
         segmentationNode = parameterNode.GetSegmentationNode()
-        segmentId = self.scriptedEffect.parameter(argName)
+        segmentId = self.scriptedEffect.parameter(argName) if self.scriptedEffect.parameterDefined(argName) else ""
         if widget.currentNode() != segmentationNode:
           widget.setCurrentNode(segmentationNode)
         widget.setCurrentSegmentID(segmentId)
@@ -166,7 +166,7 @@ class SegmentEditorEffect(AbstractScriptedSegmentEditorEffect):
     splitCavities = (self.scriptedEffect.parameter(ARG_SPLIT_CAVITIES) == "True")
     createShell = (self.scriptedEffect.parameter(ARG_CREATE_SHELL) == "True")
     region = self.scriptedEffect.parameter(ARG_REGION)
-    
+
     self.valueEditWidgets[ARG_CARVE_HOLES_IN_OUTER_SURFACE].enabled = (region == REGION_OUTER_SURFACE or region == REGION_LARGEST_CAVITY)
     self.valueEditWidgets[ARG_CARVE_HOLES_IN_OUTER_SURFACE_DIAMETER].enabled = (carveHolesInOuterSurface
       and self.valueEditWidgets[ARG_CARVE_HOLES_IN_OUTER_SURFACE].enabled)
@@ -222,7 +222,7 @@ class SegmentEditorEffect(AbstractScriptedSegmentEditorEffect):
     try:
       # Set inputs
       self.logic.segmentationNode = self.scriptedEffect.parameterSetNode().GetSegmentationNode()
-      
+
       # Save smoothing factor
       segmentationSmoothingFactor = (
         self.logic.segmentationNode.GetSegmentation().GetConversionParameter(
@@ -398,8 +398,14 @@ class WrapSolidifyLogic(object):
     segment = self.segmentationNode.GetSegmentation().GetSegment(self.segmentId)
     self._inputPd = vtk.vtkPolyData()
 
+    try:
+      masterRepresentationName = self.segmentationNode.GetSegmentation().GetSourceRepresentationName()
+    except:
+      # Legacy (Slicer-5.3 and earlier)
+      masterRepresentationName = self.segmentationNode.GetSegmentation().GetMasterRepresentationName()
+
     # Get input polydata and input spacing
-    if self.segmentationNode.GetSegmentation().GetMasterRepresentationName() == slicer.vtkSegmentationConverter().GetSegmentationBinaryLabelmapRepresentationName():
+    if masterRepresentationName == slicer.vtkSegmentationConverter().GetSegmentationBinaryLabelmapRepresentationName():
       # Master representation is binary labelmap
       # Reconvert to closed surface using chosen chosen smoothing factor
       originalSurfaceSmoothing = float(self.segmentationNode.GetSegmentation().GetConversionParameter(
@@ -630,7 +636,11 @@ class WrapSolidifyLogic(object):
   def _polydataToSegment(polydata, segmentationNode, segmentID):
     # Get existing representations
     segmentation = segmentationNode.GetSegmentation()
-    masterRepresentationName = segmentationNode.GetSegmentation().GetMasterRepresentationName()
+    try:
+      masterRepresentationName = segmentationNode.GetSegmentation().GetSourceRepresentationName()
+    except:
+      # Legacy (Slicer-5.3 and earlier)
+      masterRepresentationName = segmentationNode.GetSegmentation().GetMasterRepresentationName()
     representationNames = []
     segmentation.GetContainedRepresentationNames(representationNames)
     # Update
@@ -782,7 +792,7 @@ class WrapSolidifyLogic(object):
     spacing = self._inputSpacing / self.remeshOversampling
     maxDistance = 0.9 * spacing  # 0.9 because it is a bit more than half diameter of a cube (0.5*sqrt(3))
 
-    numberOfCells = shrunkenPdWithCracks.GetNumberOfCells() 
+    numberOfCells = shrunkenPdWithCracks.GetNumberOfCells()
     for c in range(numberOfCells):
       cell = shrunkenPdWithCracks.GetCell(c)
       points = cell.GetPoints()
